@@ -12,7 +12,8 @@ type Config struct {
 		LogLevel string `env:"APP_LOG_LEVEL" envDefault:"info"`
 	}
 	Telegram struct {
-		Token string `env:"TG_API_TOKEN,required"`
+		PermitUsers []int64 `env:"TG_PERMIT_USERS"`
+		Token       string  `env:"TG_API_TOKEN,required"`
 	}
 }
 
