@@ -5,6 +5,8 @@ import (
 	"tg-home-bot/internal/config"
 	"tg-home-bot/internal/echo"
 	"tg-home-bot/internal/middleware"
+	"tg-home-bot/internal/sensor"
+	ha "tg-home-bot/pkg/home-assistant"
 	"tg-home-bot/pkg/logging"
 	"time"
 
@@ -37,9 +39,12 @@ func initBot(config *config.Config, logger *logging.Logger) (*tele.Bot, error) {
 		return nil, err
 	}
 
+	haProvider := ha.NewService()
+
 	b.Use(middleware.PermitUsers(config.Telegram.PermitUsers))
 
 	echo.RegisterHandler(b, logger)
+	sensor.RegisterHandler(b, sensor.NewUseCase(haProvider), logger)
 
 	b.Start()
 

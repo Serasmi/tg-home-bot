@@ -1,16 +1,12 @@
 package middleware
 
 import (
-	"fmt"
-
 	tele "gopkg.in/telebot.v3"
 )
 
 func PermitUsers(IDs []int64) tele.MiddlewareFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
-			fmt.Println(c.Sender().ID)
-
 			if !hasPermit(c.Sender().ID, IDs) {
 				return nil
 			}
