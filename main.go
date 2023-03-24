@@ -39,7 +39,7 @@ func initBot(config *config.Config, logger *logging.Logger) (*tele.Bot, error) {
 		return nil, err
 	}
 
-	haProvider := ha.NewService()
+	haProvider := ha.NewService(ha.NewClient(config.HomeAssistant.URL, config.HomeAssistant.Token))
 
 	b.Use(middleware.PermitUsers(config.Telegram.PermitUsers))
 

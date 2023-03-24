@@ -11,6 +11,10 @@ type Config struct {
 	App struct {
 		LogLevel string `env:"APP_LOG_LEVEL" envDefault:"info"`
 	}
+	HomeAssistant struct {
+		URL   string `env:"HA_API_BASEURL,required"`
+		Token string `env:"HA_API_TOKEN,required"`
+	}
 	Telegram struct {
 		PermitUsers []int64 `env:"TG_PERMIT_USERS"`
 		Token       string  `env:"TG_API_TOKEN,required"`

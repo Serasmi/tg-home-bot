@@ -1,18 +1,32 @@
 package home_assistant
 
-import "fmt"
+import (
+	"errors"
+)
 
-type service struct{}
+var ErrNoSensor = errors.New("no sensor")
+
+type service struct {
+	client *client
+}
 
 var _ Service = &service{}
 
-func NewService() *service {
-	return &service{}
+func NewService(c *client) *service {
+	return &service{client: c}
 }
 
-func (s *service) GetSensorState(sensor string) (*SensorState, error) {
-	// TODO: implement method
-	value := fmt.Sprintf("No value for '%s' sensor 😢", sensor)
+func (s *service) GetSensorState(sensor string) (*SensorRawState, error) {
+	sensors, err := s.client.getSensorsState()
+	if err != nil {
+		return nil, err
+	}
 
-	return &SensorState{Value: value}, nil
+	for _, state := range sensors {
+		if state.Attributes.DeviceClass == sensor {
+			return &state, nil
+		}
+	}
+
+	return nil, ErrNoSensor
 }
