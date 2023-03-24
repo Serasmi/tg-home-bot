@@ -1,0 +1,6 @@
+name: "Telegram bot"
+description: "HA telegram bot"
+version: "2.0.0"
+slug: "tg_home_bot"
+arch:
+  - aarch64

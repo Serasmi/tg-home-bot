@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ha "tg-home-bot/pkg/home-assistant"
 	"time"
+	_ "time/tzdata"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
