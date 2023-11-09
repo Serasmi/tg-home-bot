@@ -2,29 +2,32 @@ package sensor
 
 import (
 	"fmt"
-	ha "tg-home-bot/pkg/home-assistant"
 	"time"
 	_ "time/tzdata"
+
+	ha "tg-home-bot/pkg/home-assistant"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
-type useCase struct {
+type Service interface {
+	SensorValue(sensor string) (string, error)
+}
+
+type service struct {
 	titleCaser cases.Caser
 	iotService ha.Service
 }
 
-var _ sensorUseCase = &useCase{}
-
-func NewUseCase(s ha.Service) *useCase {
-	return &useCase{
+func NewService(s ha.Service) Service {
+	return &service{
 		titleCaser: cases.Title(language.English),
 		iotService: s,
 	}
 }
 
-func (u *useCase) SensorValue(sensor string) (string, error) {
+func (u *service) SensorValue(sensor string) (string, error) {
 	state, err := u.iotService.GetSensorState(sensor)
 	if err != nil {
 		return "", err
@@ -33,7 +36,7 @@ func (u *useCase) SensorValue(sensor string) (string, error) {
 	return u.formatSensorValue(sensor, state)
 }
 
-func (u *useCase) formatSensorValue(sensor string, state *ha.SensorRawState) (string, error) {
+func (u *service) formatSensorValue(sensor string, state *ha.SensorRawState) (string, error) {
 	value := fmt.Sprintf("%s%s", state.State, state.Attributes.UnitOfMeasurement)
 
 	loc, err := time.LoadLocation("Europe/Moscow")

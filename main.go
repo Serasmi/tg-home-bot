@@ -2,36 +2,42 @@ package main
 
 import (
 	"os"
+	"time"
+
 	"tg-home-bot/internal/config"
 	"tg-home-bot/internal/echo"
 	"tg-home-bot/internal/middleware"
 	"tg-home-bot/internal/sensor"
 	ha "tg-home-bot/pkg/home-assistant"
-	"tg-home-bot/pkg/logging"
-	"time"
+	"tg-home-bot/pkg/logger"
 
 	tele "gopkg.in/telebot.v3"
 )
 
 func main() {
-	logger := logging.NewLogger()
+	cfg := config.InitConfig()
 
-	cfg := config.InitConfig(logger)
+	logger.GetLogger().SetLevel(cfg.App.LogLevel)
+	logger.GetLogger().Infof("[init] permit users: %v", cfg.Telegram.PermitUsers)
 
-	logger.Info(cfg.Telegram.PermitUsers)
-
-	logger.SetLevel(cfg.App.LogLevel)
-
-	_, err := initBot(cfg, logger)
+	_, err := initBot(cfg)
 	if err != nil {
-		logger.Fatal("Failed bot init", err)
+		logger.GetLogger().Fatal("[init] bot init", err)
 	}
 }
 
-func initBot(config *config.Config, logger *logging.Logger) (*tele.Bot, error) {
+func initBot(config *config.Config) (*tele.Bot, error) {
 	pref := tele.Settings{
 		Token:  os.Getenv("TG_API_TOKEN"),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+		OnError: func(err error, c tele.Context) {
+			if c != nil {
+				logger.GetLogger().WithField("update_id", c.Update().ID).Error(err)
+				return
+			}
+
+			logger.GetLogger().Error(err)
+		},
 	}
 
 	b, err := tele.NewBot(pref)
@@ -39,12 +45,12 @@ func initBot(config *config.Config, logger *logging.Logger) (*tele.Bot, error) {
 		return nil, err
 	}
 
-	haProvider := ha.NewService(ha.NewClient(config.HomeAssistant.URL, config.HomeAssistant.Token))
+	haProvider := ha.NewService(config.HomeAssistant.URL, config.HomeAssistant.Token)
 
 	b.Use(middleware.PermitUsers(config.Telegram.PermitUsers))
 
-	echo.RegisterHandler(b, logger)
-	sensor.RegisterHandler(b, sensor.NewUseCase(haProvider), logger)
+	echo.RegisterHandler(b)
+	sensor.RegisterHandler(b, sensor.NewService(haProvider))
 
 	b.Start()
 

@@ -2,7 +2,6 @@ package sensor
 
 import (
 	"strings"
-	"tg-home-bot/pkg/logging"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -21,11 +20,11 @@ var (
 	btnTemperature = menu.Text(Temperature)
 )
 
-type sensorUseCase interface {
-	SensorValue(string) (string, error)
+type sensorService interface {
+	SensorValue(sensor string) (string, error)
 }
 
-func RegisterHandler(bot *tele.Bot, uc sensorUseCase, logger *logging.Logger) {
+func RegisterHandler(bot *tele.Bot, uc sensorService) {
 	menu.Reply(
 		menu.Row(btnHumidity),
 		menu.Row(btnTemperature),
@@ -40,7 +39,7 @@ func startHandler(c tele.Context) error {
 	return c.Send("What do you want?", menu)
 }
 
-func humidityHandler(uc sensorUseCase) tele.HandlerFunc {
+func humidityHandler(uc sensorService) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		value, err := uc.SensorValue(strings.ToLower(Humidity))
 		if err != nil {
@@ -51,7 +50,7 @@ func humidityHandler(uc sensorUseCase) tele.HandlerFunc {
 	}
 }
 
-func temperatureHandler(uc sensorUseCase) tele.HandlerFunc {
+func temperatureHandler(uc sensorService) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		value, err := uc.SensorValue(strings.ToLower(Temperature))
 		if err != nil {

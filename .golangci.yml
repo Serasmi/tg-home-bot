@@ -115,10 +115,6 @@ linters-settings:
   gofmt:
     # simplify code: gofmt with `-s` option, true by default
     simplify: true
-  goimports:
-    # put imports beginning with prefix after 3rd-party packages;
-    # it's a comma-separated list of prefixes
-    # local-prefixes: github.com/org/project
   gocyclo:
     # minimal code complexity to report, 30 by default (but we recommend 10-20)
     min-complexity: 30
@@ -136,14 +132,6 @@ linters-settings:
     min-len: 3
     # minimal occurrences count to trigger, 3 by default
     min-occurrences: 3
-  # depguard:
-  #   list-type: blacklist
-  #   include-go-root: false
-  #   packages:
-  #     - github.com/sirupsen/logrus
-  #   packages-with-error-messages:
-  #     # specify an error message to output when a blacklisted file_provider is used
-  #     github.com/sirupsen/logrus: "logging is allowed only by logutils.Log"
   misspell:
     # Correct spellings using locale preferences for US or UK.
     # Default is to use a neutral variety of English.
@@ -248,7 +236,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
     - dogsled
     - dupl
     - errcheck
@@ -257,7 +244,6 @@ linters:
     - goconst
     - gocritic
     - gofmt
-#    - goimports
     - gosec
     - gosimple
     - govet

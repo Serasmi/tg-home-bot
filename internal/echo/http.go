@@ -1,8 +1,6 @@
 package echo
 
 import (
-	"tg-home-bot/pkg/logging"
-
 	"gopkg.in/telebot.v3"
 )
 
@@ -10,7 +8,7 @@ const (
 	echoPath = "/echo"
 )
 
-func RegisterHandler(bot *telebot.Bot, logger *logging.Logger) {
+func RegisterHandler(bot *telebot.Bot) {
 	bot.Handle(echoPath, echoHandler)
 }
 
