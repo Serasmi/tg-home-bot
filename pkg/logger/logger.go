@@ -9,6 +9,7 @@ import (
 var defaultLogger = New()
 
 type Entry = logrus.Entry
+type Fields = logrus.Fields
 
 type Logger struct {
 	*logrus.Entry

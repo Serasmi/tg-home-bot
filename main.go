@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"time"
+	_ "time/tzdata"
 
 	"tg-home-bot/internal/config"
 	"tg-home-bot/internal/echo"
@@ -50,7 +51,13 @@ func initBot(config *config.Config) (*tele.Bot, error) {
 	b.Use(middleware.PermitUsers(config.Telegram.PermitUsers))
 
 	echo.RegisterHandler(b)
-	sensor.RegisterHandler(b, sensor.NewService(haProvider))
+
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return nil, err
+	}
+
+	sensor.RegisterHandler(b, sensor.NewService(haProvider, loc, config.HomeAssistant.Timeout))
 
 	b.Start()
 

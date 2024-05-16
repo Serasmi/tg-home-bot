@@ -1,13 +1,47 @@
 package home_assistant
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
 
-type Service interface {
-	GetSensorState(string) (*SensorRawState, error)
+const StateUnknown = "unknown"
+
+var ErrNoSensor = errors.New("no sensor")
+
+type Sensor struct {
+	Name         string
+	FriendlyName string
+	ID           string
+	Class        string
 }
+
+func (s Sensor) is(state SensorRawState) bool {
+	if s.Class == SensorHumidity.Class || s.Class == SensorTemperature.Class {
+		return s.Class == state.Attributes.DeviceClass
+	}
+
+	return s.ID == state.EntityID
+}
+
+var (
+	SensorHumidity = Sensor{
+		Name:         "humidity",
+		FriendlyName: "Humidity",
+		Class:        "humidity",
+	}
+	SensorTemperature = Sensor{
+		Name:         "temperature",
+		FriendlyName: "Temperature",
+		Class:        "temperature",
+	}
+	SensorRPITemperature = Sensor{
+		Name:         "rpi_cpu_temp",
+		FriendlyName: "RPI Temperature",
+		ID:           "sensor.sensor_rpi_cpu_temp",
+	}
+)
 
 type Attributes struct {
 	DeviceClass       string `json:"device_class"`
@@ -25,6 +59,10 @@ type SensorRawState struct {
 
 type Time struct {
 	*time.Time
+}
+
+func newTime(t time.Time) Time {
+	return Time{&t}
 }
 
 func (t *Time) UnmarshalJSON(b []byte) error {

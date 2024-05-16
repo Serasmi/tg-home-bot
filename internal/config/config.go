@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"tg-home-bot/pkg/logger"
 
 	"github.com/caarlos0/env/v6"
@@ -12,8 +14,9 @@ type Config struct {
 		LogLevel string `env:"APP_LOG_LEVEL" envDefault:"info"`
 	}
 	HomeAssistant struct {
-		URL   string `env:"HA_API_BASEURL,required"`
-		Token string `env:"HA_API_TOKEN,required"`
+		Timeout time.Duration `env:"HA_TIMEOUT" envDefault:"3s"`
+		URL     string        `env:"HA_API_BASEURL,required"`
+		Token   string        `env:"HA_API_TOKEN,required"`
 	}
 	Telegram struct {
 		PermitUsers []int64 `env:"TG_PERMIT_USERS"`
