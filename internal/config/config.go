@@ -10,7 +10,8 @@ import (
 
 type Config struct {
 	App struct {
-		LogLevel string `env:"APP_LOG_LEVEL" envDefault:"info"`
+		LogLevel        string        `env:"APP_LOG_LEVEL" envDefault:"info"`
+		ShutdownTimeout time.Duration `env:"APP_SHUTDOWN_TIMEOUT" envDefault:"5s"`
 	}
 	HomeAssistant struct {
 		Timeout time.Duration `env:"HA_TIMEOUT" envDefault:"3s"`

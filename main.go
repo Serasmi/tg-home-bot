@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 	_ "time/tzdata"
 
@@ -12,28 +17,102 @@ import (
 	"tg-home-bot/internal/sensor"
 	ha "tg-home-bot/pkg/home-assistant"
 
+	"golang.org/x/sync/errgroup"
 	tele "gopkg.in/telebot.v3"
 )
 
 func main() {
-	cfg, err := config.Init()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	var (
+		app = &application{}
+		err error
+	)
+
+	app.cfg, err = config.Init()
 	if err != nil {
 		slog.Error("init config", "error", err)
 		return
 	}
 
-	initLogger(cfg.App.LogLevel)
+	initLogger(app.cfg.App.LogLevel)
 
-	slog.Info("conf: permitted users", "users", cfg.Telegram.PermitUsers)
+	slog.Info("conf: permitted users", "users", app.cfg.Telegram.PermitUsers)
 
-	_, err = initBot(cfg)
+	haProvider := ha.NewService(app.cfg.HomeAssistant.URL, app.cfg.HomeAssistant.Token)
+
+	_, err = app.initBot(haProvider)
 	if err != nil {
 		slog.Error("init bot", "error", err)
 		return
 	}
+
+	slog.Info("app starting...")
+
+	group, ctx := errgroup.WithContext(ctx)
+	group.Go(
+		func() error {
+			return app.run(ctx)
+		},
+	)
+	group.Go(func() error {
+		<-ctx.Done()
+		stop()
+
+		slog.Info("interrupted. app is shutting down...")
+
+		doneCtx, cancel := context.WithTimeout(context.Background(), app.cfg.App.ShutdownTimeout)
+		defer cancel()
+
+		closeErr := app.close(doneCtx)
+		if closeErr != nil {
+			slog.Error("close application", "error", closeErr)
+		} else {
+			slog.Info("close application")
+		}
+
+		return nil
+	})
+
+	err = group.Wait()
+	if err != nil && !errors.Is(err, context.Canceled) {
+		slog.Error("wait application", "error", err)
+	}
+
+	slog.Info("application stopped")
 }
 
-func initBot(config *config.Config) (*tele.Bot, error) {
+func initLogger(level string) {
+	var lvl slog.Level
+
+	if err := lvl.UnmarshalText([]byte(level)); err != nil {
+		slog.Default().Error("unmarshal log level", "level", level, "error", err)
+	}
+
+	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl}))
+
+	slog.SetDefault(log)
+}
+
+type application struct {
+	cfg *config.Config
+	bot *tele.Bot
+}
+
+func (app *application) run(_ context.Context) error {
+	app.bot.Start()
+
+	return nil
+}
+
+func (app *application) close(_ context.Context) error {
+	app.bot.Stop()
+
+	return nil
+}
+
+func (app *application) initBot(haProvider ha.Service) (*tele.Bot, error) {
 	pref := tele.Settings{
 		Token:  os.Getenv("TG_API_TOKEN"),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
@@ -47,37 +126,22 @@ func initBot(config *config.Config) (*tele.Bot, error) {
 		},
 	}
 
-	b, err := tele.NewBot(pref)
+	var err error
+
+	app.bot, err = tele.NewBot(pref)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("new bot: %w", err)
 	}
 
-	haProvider := ha.NewService(config.HomeAssistant.URL, config.HomeAssistant.Token)
-
-	b.Use(middleware.PermitUsers(config.Telegram.PermitUsers))
-
-	echo.RegisterHandler(b)
+	app.bot.Use(middleware.PermitUsers(app.cfg.Telegram.PermitUsers))
+	echo.RegisterHandler(app.bot)
 
 	loc, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
 		return nil, err
 	}
 
-	sensor.RegisterHandler(b, sensor.NewService(haProvider, loc, config.HomeAssistant.Timeout))
+	sensor.RegisterHandler(app.bot, sensor.NewService(haProvider, loc, app.cfg.HomeAssistant.Timeout))
 
-	b.Start()
-
-	return b, nil
-}
-
-func initLogger(level string) {
-	var lvl slog.Level
-
-	if err := lvl.UnmarshalText([]byte(level)); err != nil {
-		slog.Default().Error("unmarshal log level", "level", level, "error", err)
-	}
-
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl}))
-
-	slog.SetDefault(log)
+	return app.bot, nil
 }

@@ -6,6 +6,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/sync v0.10.0
 	golang.org/x/text v0.21.0
 	gopkg.in/telebot.v3 v3.1.4
 )
