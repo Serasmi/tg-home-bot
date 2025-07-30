@@ -95,6 +95,9 @@ func (s *service) getIcon(sensor ha.Sensor) string {
 		return "💧"
 	case ha.SensorTemperature, ha.SensorRPITemperature:
 		return "🌡️"
+	case ha.SensorServerState:
+		return "🖥️"
+
 	default:
 		return ""
 	}

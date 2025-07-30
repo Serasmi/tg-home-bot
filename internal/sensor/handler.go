@@ -23,6 +23,7 @@ func RegisterHandler(bot *tele.Bot, uc Service) {
 		btnTemperature    = menu.Text(ha.SensorTemperature.FriendlyName)
 		btnHumidity       = menu.Text(ha.SensorHumidity.FriendlyName)
 		btnRPITemperature = menu.Text(ha.SensorRPITemperature.FriendlyName)
+		btnServerState    = menu.Text(ha.SensorServerState.FriendlyName)
 	)
 
 	menu.Reply(
@@ -35,6 +36,7 @@ func RegisterHandler(bot *tele.Bot, uc Service) {
 	bot.Handle(&btnTemperature, handleSensor(uc, ha.SensorTemperature))
 	bot.Handle(&btnHumidity, handleSensor(uc, ha.SensorHumidity))
 	bot.Handle(&btnRPITemperature, handleSensor(uc, ha.SensorRPITemperature))
+	bot.Handle(&btnServerState, handleSensor(uc, ha.SensorServerState))
 }
 
 func startHandler(c tele.Context) error {
@@ -59,6 +61,7 @@ func handleSensors(uc Service) tele.HandlerFunc {
 			ha.SensorTemperature,
 			ha.SensorHumidity,
 			ha.SensorRPITemperature,
+			ha.SensorServerState,
 		)
 		if err != nil {
 			return err

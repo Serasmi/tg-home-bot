@@ -41,6 +41,11 @@ var (
 		FriendlyName: "RPI Temperature",
 		ID:           "sensor.sensor_rpi_cpu_temp",
 	}
+	SensorServerState = Sensor{
+		Name:         "nas_server_state",
+		FriendlyName: "NAS server state",
+		ID:           "binary_sensor.192_168_2_7",
+	}
 )
 
 type Attributes struct {
