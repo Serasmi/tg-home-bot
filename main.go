@@ -42,7 +42,7 @@ func main() {
 
 	haProvider := ha.NewService(app.cfg.HomeAssistant.URL, app.cfg.HomeAssistant.Token)
 
-	_, err = app.initBot(haProvider)
+	_, err = app.initBot(ctx, haProvider)
 	if err != nil {
 		slog.Error("init bot", "error", err)
 		return
@@ -112,7 +112,7 @@ func (app *application) close(_ context.Context) error {
 	return nil
 }
 
-func (app *application) initBot(haProvider ha.Service) (*tele.Bot, error) {
+func (app *application) initBot(ctx context.Context, haProvider ha.Service) (*tele.Bot, error) {
 	pref := tele.Settings{
 		Token:  os.Getenv("TG_API_TOKEN"),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
@@ -141,7 +141,7 @@ func (app *application) initBot(haProvider ha.Service) (*tele.Bot, error) {
 		return nil, err
 	}
 
-	sensor.RegisterHandler(app.bot, sensor.NewService(haProvider, loc, app.cfg.HomeAssistant.Timeout))
+	sensor.RegisterHandler(ctx, app.bot, sensor.NewService(haProvider, loc, app.cfg.HomeAssistant.Timeout))
 
 	return app.bot, nil
 }

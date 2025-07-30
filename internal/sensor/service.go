@@ -82,23 +82,9 @@ func (s *service) GetSensorValue(ctx context.Context, sensor ha.Sensor) (string,
 func (s *service) formatSensorValue(sensor ha.Sensor, state *ha.SensorRawState) (string, error) {
 	return fmt.Sprintf(
 		"%s%s is %s.\nLast updated at %s",
-		s.getIcon(sensor),
+		sensor.Icon,
 		sensor.FriendlyName,
 		state.State+state.Attributes.UnitOfMeasurement,
 		state.UpdatedAt.In(s.location).Format(time.RFC822),
 	), nil
-}
-
-func (s *service) getIcon(sensor ha.Sensor) string {
-	switch sensor {
-	case ha.SensorHumidity:
-		return "💧"
-	case ha.SensorTemperature, ha.SensorRPITemperature:
-		return "🌡️"
-	case ha.SensorServerState:
-		return "🖥️"
-
-	default:
-		return ""
-	}
 }

@@ -1,6 +1,6 @@
 name: "Telegram bot"
 description: "HA telegram bot"
-version: "2.2.0"
+version: "2.2.1"
 slug: "tg_home_bot"
 arch:
   - aarch64

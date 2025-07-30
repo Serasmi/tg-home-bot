@@ -13,40 +13,50 @@ var ErrNoSensor = errors.New("no sensor")
 type Sensor struct {
 	Name         string
 	FriendlyName string
+	ShortName    string
 	ID           string
 	Class        string
+	Icon         string
 }
 
 func (s Sensor) matched(state SensorRawState) bool {
-	if s.Class == SensorHumidity.Class || s.Class == SensorTemperature.Class {
+	if s.Class != "" {
 		return s.Class == state.Attributes.DeviceClass
 	}
 
 	return s.ID == state.EntityID
 }
 
-var (
-	SensorHumidity = Sensor{
+var Sensors = []Sensor{
+	{
 		Name:         "humidity",
 		FriendlyName: "Humidity",
+		ShortName:    "Humidity",
 		Class:        "humidity",
-	}
-	SensorTemperature = Sensor{
+		Icon:         "💧",
+	},
+	{
 		Name:         "temperature",
 		FriendlyName: "Temperature",
+		ShortName:    "Temp",
 		Class:        "temperature",
-	}
-	SensorRPITemperature = Sensor{
+		Icon:         "🌡️",
+	},
+	{
 		Name:         "rpi_cpu_temp",
 		FriendlyName: "RPI Temperature",
+		ShortName:    "RPI Temp",
 		ID:           "sensor.sensor_rpi_cpu_temp",
-	}
-	SensorServerState = Sensor{
+		Icon:         "🌡️",
+	},
+	{
 		Name:         "nas_server_state",
 		FriendlyName: "NAS server state",
+		ShortName:    "Server",
 		ID:           "binary_sensor.192_168_2_7",
-	}
-)
+		Icon:         "🖥️",
+	},
+}
 
 type Attributes struct {
 	DeviceClass       string `json:"device_class"`

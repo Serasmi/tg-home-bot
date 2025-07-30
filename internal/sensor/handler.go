@@ -17,26 +17,25 @@ var (
 	menu = &tele.ReplyMarkup{ResizeKeyboard: true, OneTimeKeyboard: true}
 )
 
-func RegisterHandler(bot *tele.Bot, uc Service) {
-	var (
-		btnAll            = menu.Text(allSensorsText)
-		btnTemperature    = menu.Text(ha.SensorTemperature.FriendlyName)
-		btnHumidity       = menu.Text(ha.SensorHumidity.FriendlyName)
-		btnRPITemperature = menu.Text(ha.SensorRPITemperature.FriendlyName)
-		btnServerState    = menu.Text(ha.SensorServerState.FriendlyName)
-	)
+func RegisterHandler(ctx context.Context, bot *tele.Bot, uc Service) {
+	btnAll := menu.Text(allSensorsText)
+
+	sensorButtons := make([]tele.Btn, len(ha.Sensors))
+	for i := range ha.Sensors {
+		sensorButtons[i] = menu.Text(ha.Sensors[i].ShortName)
+	}
 
 	menu.Reply(
 		menu.Row(btnAll),
-		menu.Row(btnTemperature, btnHumidity, btnRPITemperature, btnServerState),
+		menu.Row(sensorButtons...),
 	)
 
 	bot.Handle(startPath, startHandler)
-	bot.Handle(&btnAll, handleSensors(uc))
-	bot.Handle(&btnTemperature, handleSensor(uc, ha.SensorTemperature))
-	bot.Handle(&btnHumidity, handleSensor(uc, ha.SensorHumidity))
-	bot.Handle(&btnRPITemperature, handleSensor(uc, ha.SensorRPITemperature))
-	bot.Handle(&btnServerState, handleSensor(uc, ha.SensorServerState))
+	bot.Handle(&btnAll, handleSensors(ctx, uc, ha.Sensors))
+
+	for i := range ha.Sensors {
+		bot.Handle(&sensorButtons[i], handleSensor(uc, ha.Sensors[i]))
+	}
 }
 
 func startHandler(c tele.Context) error {
@@ -54,15 +53,9 @@ func handleSensor(uc Service, sensor ha.Sensor) tele.HandlerFunc {
 	}
 }
 
-func handleSensors(uc Service) tele.HandlerFunc {
+func handleSensors(ctx context.Context, uc Service, sensors []ha.Sensor) tele.HandlerFunc {
 	return func(c tele.Context) error {
-		value, err := uc.GetSensorsValue(
-			context.Background(),
-			ha.SensorTemperature,
-			ha.SensorHumidity,
-			ha.SensorRPITemperature,
-			ha.SensorServerState,
-		)
+		value, err := uc.GetSensorsValue(ctx, sensors...)
 		if err != nil {
 			return err
 		}
