@@ -6,10 +6,12 @@ import (
 
 const (
 	echoPath = "/echo"
+	sayPath  = "/say"
 )
 
 func RegisterHandler(bot *telebot.Bot) {
 	bot.Handle(echoPath, echoHandler)
+	bot.Handle(sayPath, echoHandler)
 }
 
 func echoHandler(c telebot.Context) error {

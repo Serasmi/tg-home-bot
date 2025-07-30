@@ -28,7 +28,7 @@ func RegisterHandler(bot *tele.Bot, uc Service) {
 
 	menu.Reply(
 		menu.Row(btnAll),
-		menu.Row(btnTemperature, btnHumidity, btnRPITemperature),
+		menu.Row(btnTemperature, btnHumidity, btnRPITemperature, btnServerState),
 	)
 
 	bot.Handle(startPath, startHandler)
