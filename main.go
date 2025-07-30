@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"time"
 	_ "time/tzdata"
@@ -10,20 +11,25 @@ import (
 	"tg-home-bot/internal/middleware"
 	"tg-home-bot/internal/sensor"
 	ha "tg-home-bot/pkg/home-assistant"
-	"tg-home-bot/pkg/logger"
 
 	tele "gopkg.in/telebot.v3"
 )
 
 func main() {
-	cfg := config.InitConfig()
-
-	logger.GetLogger().SetLevel(cfg.App.LogLevel)
-	logger.GetLogger().Infof("[init] permit users: %v", cfg.Telegram.PermitUsers)
-
-	_, err := initBot(cfg)
+	cfg, err := config.Init()
 	if err != nil {
-		logger.GetLogger().Fatal("[init] bot init", err)
+		slog.Error("init config", "error", err)
+		return
+	}
+
+	initLogger(cfg.App.LogLevel)
+
+	slog.Info("conf: permitted users", "users", cfg.Telegram.PermitUsers)
+
+	_, err = initBot(cfg)
+	if err != nil {
+		slog.Error("init bot", "error", err)
+		return
 	}
 }
 
@@ -33,11 +39,11 @@ func initBot(config *config.Config) (*tele.Bot, error) {
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 		OnError: func(err error, c tele.Context) {
 			if c != nil {
-				logger.GetLogger().WithField("update_id", c.Update().ID).Error(err)
+				slog.Error("bot error", "update_id", c.Update().ID, "error", err.Error())
 				return
 			}
 
-			logger.GetLogger().Error(err)
+			slog.Error("bot error", "error", err.Error())
 		},
 	}
 
@@ -62,4 +68,16 @@ func initBot(config *config.Config) (*tele.Bot, error) {
 	b.Start()
 
 	return b, nil
+}
+
+func initLogger(level string) {
+	var lvl slog.Level
+
+	if err := lvl.UnmarshalText([]byte(level)); err != nil {
+		slog.Default().Error("unmarshal log level", "level", level, "error", err)
+	}
+
+	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl}))
+
+	slog.SetDefault(log)
 }

@@ -42,13 +42,13 @@ func (s *service) GetSensorState(ctx context.Context, sensor Sensor) (*SensorRaw
 }
 
 func (s *service) GetSensorsState(ctx context.Context, sensors ...Sensor) ([]SensorRawState, error) {
-	if len(sensors) == 0 {
-		return nil, ErrNoSensor
-	}
-
 	states, err := s.fetchSensorsState(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(sensors) == 0 {
+		return states, nil
 	}
 
 	res := make([]SensorRawState, len(sensors))
@@ -56,7 +56,7 @@ func (s *service) GetSensorsState(ctx context.Context, sensors ...Sensor) ([]Sen
 loop:
 	for i := range sensors {
 		for j := range states {
-			if sensors[i].is(states[j]) {
+			if sensors[i].matched(states[j]) {
 				res[i] = states[j]
 				continue loop
 			}

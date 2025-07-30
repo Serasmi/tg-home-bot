@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine3.19 as builder
+FROM golang:1.24-alpine as builder
 
 WORKDIR /usr/src/app
 
@@ -9,7 +9,7 @@ RUN go mod download && go mod verify
 COPY . .
 RUN GOOS=linux GOARCH=arm64 go build -v -o tg-home-bot
 
-FROM alpine:3.19
+FROM alpine:3.22
 
 WORKDIR /usr/local/bin/
 

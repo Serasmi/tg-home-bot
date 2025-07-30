@@ -1,9 +1,8 @@
 package config
 
 import (
+	"fmt"
 	"time"
-
-	"tg-home-bot/pkg/logger"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
@@ -24,24 +23,18 @@ type Config struct {
 	}
 }
 
-var config Config
-
-func GetConfig() *Config {
-	return &config
-}
-
-func InitConfig() *Config {
-	logger.GetLogger().Debug("init config")
-
+func Init() (*Config, error) {
 	err := godotenv.Load()
 	if err != nil {
-		logger.GetLogger().Fatalf("Error loading .env file: %s", err.Error())
+		return nil, fmt.Errorf("load .env file: %w", err)
 	}
+
+	var config Config
 
 	err = env.Parse(&config)
 	if err != nil {
-		logger.GetLogger().Fatal("init config error ", err)
+		return nil, fmt.Errorf("parse .env file: %w", err)
 	}
 
-	return &config
+	return &config, nil
 }

@@ -17,7 +17,7 @@ type Sensor struct {
 	Class        string
 }
 
-func (s Sensor) is(state SensorRawState) bool {
+func (s Sensor) matched(state SensorRawState) bool {
 	if s.Class == SensorHumidity.Class || s.Class == SensorTemperature.Class {
 		return s.Class == state.Attributes.DeviceClass
 	}

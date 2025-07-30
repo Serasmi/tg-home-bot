@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	ha "tg-home-bot/pkg/home-assistant"
-	"tg-home-bot/pkg/logger"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -57,10 +57,11 @@ func (s *service) GetSensorsValue(ctx context.Context, sensors ...ha.Sensor) (st
 	for i := range states {
 		res[i], err = s.formatSensorValue(sensors[i], &states[i])
 		if err != nil {
-			logger.GetLogger().WithFields(logger.Fields{
-				"sensor": sensors[i],
-				"state":  states[i],
-			}).WithError(err).Error("format sensor value")
+			slog.Error("format sensor value",
+				"error", err,
+				"sensor", sensors[i],
+				"state", states[i],
+			)
 
 			return "", err
 		}
